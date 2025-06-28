@@ -6,7 +6,7 @@ from .models import User, RolePermission, WorkerPermission
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     model = User
-    list_display = ('username', 'email', 'is_center', 'is_market', 'is_staff', 'is_superuser')
+    list_display = ('id','username', 'email', 'is_center', 'is_market', 'is_staff', 'is_superuser')
     list_filter = ('is_center', 'is_market', 'is_staff', 'is_superuser')
 
     fieldsets = BaseUserAdmin.fieldsets + (
@@ -19,12 +19,12 @@ class UserAdmin(BaseUserAdmin):
 
 @admin.register(RolePermission)
 class RolePermissionAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name', 'center')
+    list_display = ('id','code', 'name', 'center')
     search_fields = ('code', 'name')
     list_filter = ('center',)
 
 @admin.register(WorkerPermission)
 class WorkerPermissionAdmin(admin.ModelAdmin):
-    list_display = ('worker', 'permission')
+    list_display = ('id','worker', 'permission')
     search_fields = ('worker__username', 'permission__code')
     list_filter = ('worker', 'permission')

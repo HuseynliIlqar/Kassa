@@ -1,5 +1,4 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -11,7 +10,7 @@ from auth_system.serializers import RolePermissionSerializer, WorkerPermissionSe
 class RolePermissionViewSet(viewsets.ModelViewSet):
     queryset = RolePermission.objects.all()
     serializer_class = RolePermissionSerializer
-    permission_classes = [IsAuthenticated,IsCenterUser]
+    permission_classes = [IsCenterUser]
 
     def get_queryset(self):
         return RolePermission.objects.filter(center=self.request.user)
@@ -22,7 +21,7 @@ class RolePermissionViewSet(viewsets.ModelViewSet):
 class WorkerPermissionViewSet(viewsets.ModelViewSet):
     queryset = WorkerPermission.objects.all()
     serializer_class = WorkerPermissionSerializer
-    permission_classes = [IsAuthenticated, IsCenterUser]
+    permission_classes = [IsCenterUser]
 
 
     def get_queryset(self):
@@ -30,7 +29,7 @@ class WorkerPermissionViewSet(viewsets.ModelViewSet):
         return self.queryset.filter(center=user)
 
 class CreateUserView(APIView):
-    permission_classes = [IsAuthenticated, IsCenterUser]
+    permission_classes = [IsCenterUser]
 
     def get(self, request, *args, **kwargs):
         workers = User.objects.filter(created_by_center=request.user)

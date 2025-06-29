@@ -31,6 +31,7 @@ class Product(models.Model):
     unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True)
     supplier = models.ForeignKey('products.Supplier', on_delete=models.SET_NULL, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    product_creator = models.ForeignKey('auth_system.User', on_delete=models.SET_NULL, null=True, related_name='created_products')
 
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -19,14 +19,7 @@ class ProductSerializer(serializers.ModelSerializer):
         required=True,
         error_messages={'required': 'Alış qiyməti boş qoyula bilməz!'
 })
-
-    #Read only fields
-    is_active = serializers.BooleanField(default=True, read_only=True)
-    created_at = serializers.DateTimeField(read_only=True)
-    updated_at = serializers.DateTimeField(read_only=True)
-
-
-    # ForeignKey fields as SlugRelatedField
+  # ForeignKey fields as SlugRelatedField
     category = serializers.SlugRelatedField(
         slug_field='name',
         queryset=Category.objects.all(),
@@ -49,6 +42,15 @@ class ProductSerializer(serializers.ModelSerializer):
         error_messages={'required': 'Tədarükçü boş qoyula bilməz!'
 })
 
+    #Read only fields
+    is_active = serializers.BooleanField(default=True, read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        validated_data['product_creator'] = user
+        return super().create(validated_data)
 
     class Meta:
         model = Product

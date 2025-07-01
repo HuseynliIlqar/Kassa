@@ -14,9 +14,8 @@ class MarketProductViewSet(viewsets.ModelViewSet):
         created_markets = self.request.user.created_users.values_list('id', flat=True)
         return MarketProduct.objects.filter(market_id__in=created_markets)
 
-    def create(self):
-        user = self.request.user
+    def create(self, request, *args, **kwargs):
+        user = request.user
         if not user.is_authenticated or not user.is_stock_accses:
             raise PermissionDenied("You do not have permission to perform this action.")
-
-        return super().create(self.request.data)
+        return super().create(request, *args, **kwargs)

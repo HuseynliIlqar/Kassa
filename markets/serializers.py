@@ -1,11 +1,14 @@
 from rest_framework import serializers
-from markets.models import MarketProduct
+from markets.models import MarketProduct, Market
+from products.models import Product
+
 
 class MarketProductSerializer(serializers.ModelSerializer):
-    market = serializers.StringRelatedField()
-    product = serializers.StringRelatedField()
-    quantity = serializers.DecimalField(max_digits=10, decimal_places=2)
+    market = serializers.PrimaryKeyRelatedField(queryset=Market.objects.all())
+    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
+    market_name = serializers.CharField(source='market.name', read_only=True)
+    product_name = serializers.CharField(source='product.name', read_only=True)
 
     class Meta:
         model = MarketProduct
-        fields = '__all__'
+        fields = ['id', 'market', 'market_name', 'product', 'product_name', 'quantity']

@@ -1,38 +1,22 @@
 from rest_framework import serializers
-from .models import RolePermission, WorkerPermission, User
-
-
-class RolePermissionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = RolePermission
-        fields = ['id', 'code', 'name']
-
-
-class UserShortSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username']
-
-
-class WorkerPermissionSerializer(serializers.ModelSerializer):
-    worker = UserShortSerializer(read_only=True)
-    worker_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), write_only=True, source='worker')
-    permission = RolePermissionSerializer(read_only=True)
-    permission_id = serializers.PrimaryKeyRelatedField(queryset=RolePermission.objects.all(), write_only=True, source='permission')
-
-    class Meta:
-        model = WorkerPermission
-        fields = '__all__'
-        read_only_fields = ['center']
-
-    def create(self, validated_data):
-        validated_data['center'] = self.context['request'].user
-        return super().create(validated_data)
+from .models import User
 
 class CreateUserSerializer(serializers.ModelSerializer):
+    is_stock_accses = serializers.BooleanField(required=True)
+    is_cash_desk_accses = serializers.BooleanField(required=True)
+    is_panel_accses = serializers.BooleanField(required=True)
+
     class Meta:
         model = User
-        fields = ['username', 'password', 'is_center', 'is_market', 'id']
+        fields = [ 'id','username',
+                   'password',
+                   'is_center',
+                   'is_market',
+                   'is_stock_accses',
+                   'is_cash_desk_accses',
+                   'is_panel_accses',
+        ]
+
         extra_kwargs = {
             'password': {'write_only': True},
             'is_center': {'read_only': True}
@@ -44,6 +28,9 @@ class CreateUserSerializer(serializers.ModelSerializer):
             password=validated_data['password'],
             is_center=False,
             is_market=True,
+            is_stock_accses=validated_data['is_stock_accses'],
+            is_cash_desk_accses=validated_data['is_cash_desk_accses'],
+            is_panel_accses=validated_data['is_panel_accses'],
             created_by_center=self.context['request'].user
         )
         return user

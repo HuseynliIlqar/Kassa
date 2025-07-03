@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'auth_system',
     'markets',
     'products',
+    'cashDesk',
 
     # 3rd party app-lar
     'rest_framework',

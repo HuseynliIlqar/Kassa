@@ -6,6 +6,7 @@ class Sale(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     datetime = models.DateTimeField(auto_now_add=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    is_counted = models.BooleanField(default=False)
     # əlavə field-lar buraya əlavə oluna bilər
 
     def __str__(self):
@@ -16,6 +17,7 @@ class SaleItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    returned_quantity = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name} in Sale #{self.sale.id}"

@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -28,16 +27,9 @@ class SaleViewSet(viewsets.ModelViewSet):
     def day_summary(self, request):
         user = request.user
         today = timezone.now().date()
-        is_counted_param = request.query_params.get('is_counted')
-        sales_qs = Sale.objects.filter(user=user, datetime__date=today)
-        if is_counted_param is not None:
-            if is_counted_param.lower() == 'true':
-                sales_qs = sales_qs.filter(is_counted=True)
-            elif is_counted_param.lower() == 'false':
-                sales_qs = sales_qs.filter(is_counted=False)
-        sales = sales_qs
-        total = sales.aggregate(total_price_sum=Sum('total_price'))['total_price_sum'] or 0
-        serializer = self.get_serializer(sales, many=True)
+        sales_qs = self.get_queryset().filter(user=user, datetime__date=today)
+        total = sales_qs.aggregate(total_price_sum=Sum('total_price'))['total_price_sum'] or 0
+        serializer = self.get_serializer(sales_qs, many=True)
         kassir_center = getattr(user, 'created_by_center', None)
         kassir_center_id = kassir_center.id if kassir_center else None
         kassir_center_name = str(kassir_center) if kassir_center else None
@@ -47,7 +39,7 @@ class SaleViewSet(viewsets.ModelViewSet):
             'cashier_username': user.username,
             'cashier_center_id': kassir_center_id,
             'cashier_center_name': kassir_center_name,
-            'total_sales_count': sales.count(),
+            'total_sales_count': sales_qs.count(),
             'total_sales_amount': total,
             'sales': serializer.data
         })
@@ -98,15 +90,7 @@ class SaleViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='all-cashiers-day-summary')
     def all_cashiers_day_summary(self, request):
         today = timezone.now().date()
-        is_counted_param = request.query_params.get('is_counted')
-        sales_qs = Sale.objects.filter(datetime__date=today)
-        if is_counted_param is not None:
-            if is_counted_param.lower() == 'true':
-                sales_qs = sales_qs.filter(is_counted=True)
-            elif is_counted_param.lower() == 'false':
-                sales_qs = sales_qs.filter(is_counted=False)
-        sales = sales_qs
-        # Kassirə görə qruplaşdır
+        sales_qs = self.get_queryset().filter(datetime__date=today)
         from collections import defaultdict
         cashier_data = defaultdict(lambda: {
             'cashier_id': None,
@@ -117,7 +101,7 @@ class SaleViewSet(viewsets.ModelViewSet):
             'total_sales_amount': 0,
             'sales': []
         })
-        for sale in sales:
+        for sale in sales_qs:
             user = sale.user
             kassir_center = getattr(user, 'created_by_center', None)
             kassir_center_id = kassir_center.id if kassir_center else None
@@ -134,3 +118,69 @@ class SaleViewSet(viewsets.ModelViewSet):
             'date': str(today),
             'cashiers': list(cashier_data.values())
         })
+
+    @action(detail=True, methods=['post'], url_path='checkout')
+    def checkout(self, request, pk=None):
+        sale = self.get_object()
+        if not sale.is_cart:
+            return Response({'detail': 'Bu səbət artıq satışa çevrilib.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Stokdan çıx və satışa çevir
+        total_price = 0
+        user = sale.user
+        center_user = getattr(user, 'created_by_center', None)
+        market = None
+        if center_user:
+            from markets.models import MarketProduct, Market
+            market = Market.objects.filter(center=center_user).first()
+        for item in sale.items.all():
+            product = item.product
+            quantity = item.quantity
+            price = product.price or 0
+            if market:
+                market_product = MarketProduct.objects.get(market=market, product=product)
+                market_product.quantity -= quantity
+                market_product.save()
+            item.price = price
+            item.save()
+            total_price += price * quantity
+        sale.total_price = total_price
+        sale.is_cart = False
+        sale.save()
+        return Response({'detail': 'Səbət satışa çevrildi.', 'sale_id': sale.id})
+
+    @action(detail=False, methods=['post'], url_path='checkout')
+    def checkout(self, request):
+        user = request.user
+        sale = Sale.objects.filter(user=user, is_cart=True).first()
+        if not sale:
+            return Response({'detail': 'Aktiv səbət tapılmadı.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Stokdan çıx və satışa çevir
+        total_price = 0
+        center_user = getattr(user, 'created_by_center', None)
+        market = None
+        if center_user:
+            from markets.models import MarketProduct, Market
+            market = Market.objects.filter(center=center_user).first()
+        for item in sale.items.all():
+            product = item.product
+            quantity = item.quantity
+            price = product.price or 0
+            if market:
+                market_product = MarketProduct.objects.get(market=market, product=product)
+                market_product.quantity -= quantity
+                market_product.save()
+            item.price = price
+            item.save()
+            total_price += price * quantity
+        sale.total_price = total_price
+        sale.is_cart = False
+        sale.save()
+        return Response({'detail': 'Səbət satışa çevrildi.', 'sale_id': sale.id})
+
+    # Günlük satışlar və statistikalar yalnız is_cart=False üçün hesablanır
+    def get_queryset(self):
+        qs = super().get_queryset()
+        # Yalnız satışa çevrilmiş və is_counted=False olmayanları qaytar
+        if self.action in ['list', 'day_summary', 'all_cahiers_day_summary']:
+            return qs.filter(is_cart=False, is_counted=False)
+        return qs

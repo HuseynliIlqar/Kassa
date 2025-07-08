@@ -7,6 +7,7 @@ class User(AbstractUser):
     is_stock_accses = models.BooleanField(default=False)
     is_cash_desk_accses = models.BooleanField(default=False)
     is_panel_accses = models.BooleanField(default=False)
+    is_price_accses = models.BooleanField(default=False)
     created_by_center = models.ForeignKey('self',null=True,blank=True,on_delete=models.SET_NULL,related_name='created_users')
 
     def __str__(self):

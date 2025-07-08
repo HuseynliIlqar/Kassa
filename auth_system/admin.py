@@ -16,6 +16,7 @@ class UserAdmin(BaseUserAdmin):
             'is_stock_accses',
             'is_cash_desk_accses',
             'is_panel_accses',
+            'is_price_accses',
             'created_by_center',
         )}),
     )
@@ -27,6 +28,7 @@ class UserAdmin(BaseUserAdmin):
             'is_stock_accses',
             'is_cash_desk_accses',
             'is_panel_accses',
+            'is_price_accses',
             'created_by_center',
         )}),
     )

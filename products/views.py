@@ -1,5 +1,10 @@
 from rest_framework import viewsets
-from auth_system.permissions import IsCenterUser
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from django.http import HttpResponse, HttpResponseRedirect
+from django.template.loader import render_to_string
+from auth_system.permissions import IsCenterUser, IsAccsesPrice
 from .models import Product
 from .serializers import ProductSerializer
 
@@ -8,3 +13,67 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsCenterUser]
+
+    @action(permission_classes=[IsAuthenticated], detail=False, methods=['get'], url_path='my-products')
+    def get_queryset(self):
+        user = self.request.user
+        center_user = getattr(user, 'created_by_center', None)
+        if center_user:
+            return self.queryset.filter(product_creator=center_user)
+        return self.queryset.none()
+
+    @action(detail=False, methods=['get', 'post'], url_path='price-change-list', permission_classes=[IsAuthenticated, IsAccsesPrice])
+    def price_change_list(self, request):
+        if request.method == 'GET':
+            products = Product.objects.filter(update=True)
+            data = [{'id': p.id, 'name': p.name, 'price': str(p.price)} for p in products]
+            return Response(data)
+        elif request.method == 'POST':
+            products = Product.objects.filter(update=True)
+            # Dinamik məlumatları göndər
+            product_data = [
+                {
+                    'name': p.name,
+                    'price': p.price,
+                    'barcode': p.barcode,
+                } for p in products
+            ]
+            html_content = render_to_string('price_change_list.html', {'products': product_data})
+            for p in products:
+                p.update = False
+                p.save()
+            return HttpResponse(html_content, content_type='text/html')
+
+    def update(self, request, *args, **kwargs):
+        response = super().update(request, *args, **kwargs)
+        instance = self.get_object()
+        instance.update = True
+        instance.save()
+        return response
+
+    def partial_update(self, request, *args, **kwargs):
+        response = super().partial_update(request, *args, **kwargs)
+        instance = self.get_object()
+        instance.update = True
+        instance.save()
+        return response
+
+    @action(detail=False, methods=['post'], url_path='get-prices-by-barcodes-html', permission_classes=[IsAuthenticated])
+    def get_prices_by_barcodes_html(self, request):
+        """
+        POST body: {"barcodes": ["1234567890", ...]}
+        Returns: HTML with product info for given barcodes
+        """
+        barcodes = request.data.get('barcodes', [])
+        if not isinstance(barcodes, list):
+            return Response({'error': 'barcodes must be a list'}, status=400)
+        products = Product.objects.filter(barcode__in=barcodes)
+        product_data = [
+            {
+                'name': p.name,
+                'price': p.price,
+                'barcode': p.barcode,
+            } for p in products
+        ]
+        html_content = render_to_string('price_change_list.html', {'products': product_data})
+        return HttpResponse(html_content, content_type='text/html')

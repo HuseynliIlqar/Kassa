@@ -5,6 +5,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
     is_stock_accses = serializers.BooleanField(required=True)
     is_cash_desk_accses = serializers.BooleanField(required=True)
     is_panel_accses = serializers.BooleanField(required=True)
+    is_price_accses = serializers.BooleanField(required=True)
 
     class Meta:
         model = User
@@ -15,6 +16,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
                    'is_stock_accses',
                    'is_cash_desk_accses',
                    'is_panel_accses',
+                   'is_price_accses'
         ]
 
         extra_kwargs = {
@@ -31,6 +33,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
             is_stock_accses=validated_data['is_stock_accses'],
             is_cash_desk_accses=validated_data['is_cash_desk_accses'],
             is_panel_accses=validated_data['is_panel_accses'],
+            is_price_accses=validated_data['is_price_accses'],
             created_by_center=self.context['request'].user
         )
         return user

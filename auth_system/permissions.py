@@ -7,3 +7,7 @@ class IsCenterUser(BasePermission):
 class IsAccsesStock(BasePermission):
     def has_permission(self,request,view):
         return request.user and request.user.is_authenticated and request.user.is_stock_accses
+
+class IsAccsesPrice(BasePermission):
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated and request.user.is_price_accses

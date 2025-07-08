@@ -32,6 +32,7 @@ class Product(models.Model):
     supplier = models.ForeignKey('products.Supplier', on_delete=models.SET_NULL, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     product_creator = models.ForeignKey('auth_system.User', on_delete=models.SET_NULL, null=True, related_name='created_products')
+    update = models.BooleanField(default=False)
 
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -39,3 +40,8 @@ class Product(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.barcode})"
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            old = Product.objects.get(pk=self.pk)
+        super().save(*args, **kwargs)

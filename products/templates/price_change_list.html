@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <title>Qiymət Dəyişən Məhsullar</title>
+    <style>
+        body {
+            background: #eee;
+        }
+        .labels-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 24px;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 10px;
+        }
+        .label {
+            background: #fff;
+            border: 2px dotted #222;
+            min-width: 280px;
+            max-width: 380px;
+            width: 100%;
+            height: 190px;
+            padding: 18px 16px 10px 16px;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin: 0 auto;
+        }
+        .label-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 0 0 8px 0;
+            letter-spacing: 0.5px;
+        }
+        .new-price-block {
+            margin-top: 8px;
+        }
+        .new-price-dollar {
+            font-size: 20px;
+            vertical-align: super;
+            margin-right: 4px;
+        }
+        .new-price {
+            font-size: 32px;
+            font-weight: bold;
+            color: #111;
+            letter-spacing: 1px;
+        }
+        .bottom {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .code-block {
+            font-size: 14px;
+        }
+        .barcode {
+            margin-top: 2px;
+            font-size: 22px;
+            letter-spacing: 3px;
+            font-family: 'Libre Barcode 39', cursive, monospace;
+        }
+        @media (max-width: 720px) {
+            .labels-grid {
+                flex-direction: column;
+                align-items: center;
+            }
+            .label {
+                max-width: 98vw;
+                height: auto;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+39&display=swap" rel="stylesheet">
+</head>
+<body>
+    {% if products %}
+    <div class="labels-grid">
+        {% for product in products %}
+        <div class="label">
+            <h1 class="label-title">{{ product.name }}</h1>
+            <div class="new-price-block">
+                <span class="new-price-dollar">₼</span>
+                <span class="new-price">{{ product.price }}</span>
+            </div>
+            <div class="bottom">
+                <div>
+                    <div class="code-block">Barkod: {{ product.barcode }}</div>
+                    <div class="barcode">*{{ product.barcode }}*</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p>Heç bir məhsulun qiyməti dəyişməyib.</p>
+    {% endif %}
+</body>
+</html>

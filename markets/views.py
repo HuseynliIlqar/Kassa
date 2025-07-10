@@ -11,8 +11,9 @@ class MarketProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAccsesStock]
 
     def get_queryset(self):
-        created_markets = self.request.user.created_users.values_list('id', flat=True)
-        return MarketProduct.objects.filter(market_id__in=created_markets)
+        user = self.request.user
+        center_user = getattr(user, 'created_by_center', None)
+        return MarketProduct.objects.filter(market__center=center_user)
 
     def create(self, request, *args, **kwargs):
         user = request.user

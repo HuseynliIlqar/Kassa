@@ -55,7 +55,6 @@ class SaleViewSet(viewsets.ModelViewSet):
         kassir_center = getattr(user, 'created_by_center', None)
         kassir_center_id = kassir_center.id if kassir_center else None
         kassir_center_name = str(kassir_center) if kassir_center else None
-        # Satışları hesabatlanmış kimi işarələ
         sales.update(is_counted=True)
         return Response({
             'date': str(today),
@@ -74,18 +73,32 @@ class SaleViewSet(viewsets.ModelViewSet):
         sale_item_id = request.data.get('sale_item_id')
         return_quantity = int(request.data.get('return_quantity', 0))
         if not sale_id or not sale_item_id or return_quantity <= 0:
-            return Response({'error': 'sale_id, sale_item_id və return_quantity göndərilməlidir.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'sale_id, sale_item_id və return_quantity göndərilməlidir.'},
+                            status=status.HTTP_400_BAD_REQUEST)
         try:
-            sale_item = Sale.objects.get(id=sale_id).items.get(id=sale_item_id)
+            sale = Sale.objects.get(id=sale_id)
+            sale_item = sale.items.get(id=sale_item_id)
         except Sale.DoesNotExist:
             return Response({'error': 'Satış tapılmadı.'}, status=status.HTTP_404_NOT_FOUND)
-        except Exception:
+        except SaleItem.DoesNotExist:
             return Response({'error': 'Satış məhsulu tapılmadı.'}, status=status.HTTP_404_NOT_FOUND)
         if sale_item.returned_quantity + return_quantity > sale_item.quantity:
-            return Response({'error': 'Qaytarılacaq miqdar satış miqdarından çox ola bilməz.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Qaytarılacaq miqdar satış miqdarından çox ola bilməz.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         sale_item.returned_quantity += return_quantity
         sale_item.save()
-        return Response({'message': 'Qaytarma uğurla qeydə alındı.', 'sale_item_id': sale_item.id, 'returned_quantity': sale_item.returned_quantity})
+
+        minus_total = sale_item.price * return_quantity
+        sale.total_price -= minus_total
+        sale.save()
+
+        return Response({
+            'message': 'Qaytarma uğurla qeydə alındı.',
+            'sale_item_id': sale_item.id,
+            'returned_quantity': sale_item.returned_quantity,
+            'new_total_price': float(sale.total_price)  # Response üçün float
+        })
 
     @action(detail=False, methods=['get'], url_path='all-cashiers-day-summary')
     def all_cashiers_day_summary(self, request):
@@ -124,7 +137,6 @@ class SaleViewSet(viewsets.ModelViewSet):
         sale = self.get_object()
         if not sale.is_cart:
             return Response({'detail': 'Bu səbət artıq satışa çevrilib.'}, status=status.HTTP_400_BAD_REQUEST)
-        # Stokdan çıx və satışa çevir
         total_price = 0
         user = sale.user
         center_user = getattr(user, 'created_by_center', None)
@@ -154,7 +166,6 @@ class SaleViewSet(viewsets.ModelViewSet):
         sale = Sale.objects.filter(user=user, is_cart=True).first()
         if not sale:
             return Response({'detail': 'Aktiv səbət tapılmadı.'}, status=status.HTTP_400_BAD_REQUEST)
-        # Stokdan çıx və satışa çevir
         total_price = 0
         center_user = getattr(user, 'created_by_center', None)
         market = None
@@ -177,10 +188,8 @@ class SaleViewSet(viewsets.ModelViewSet):
         sale.save()
         return Response({'detail': 'Səbət satışa çevrildi.', 'sale_id': sale.id})
 
-    # Günlük satışlar və statistikalar yalnız is_cart=False üçün hesablanır
     def get_queryset(self):
         qs = super().get_queryset()
-        # Yalnız satışa çevrilmiş və is_counted=False olmayanları qaytar
         if self.action in ['list', 'day_summary', 'all_cahiers_day_summary']:
             return qs.filter(is_cart=False, is_counted=False)
         return qs

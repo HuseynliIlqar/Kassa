@@ -8,7 +8,7 @@ class Sale(models.Model):
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     is_counted = models.BooleanField(default=False)
     is_cart = models.BooleanField(default=True)
-    # əlavə field-lar buraya əlavə oluna bilər
+
 
     def __str__(self):
         return f"Sale #{self.id} by {self.user} on {self.datetime}"

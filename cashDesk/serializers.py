@@ -49,7 +49,6 @@ class SaleSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError('Məhsul tapılmadı və ya barkod yanlışdır.')
             if product.product_creator != center_user:
                 raise serializers.ValidationError(f'{product.name} məhsulunu yalnız öz mərkəzinə aid məhsullar üçün satış edə bilərsən.')
-        # Stok yoxlanışı ləğv olundu, stok -yə düşə bilər
         return attrs
 
     def create(self, validated_data):
@@ -58,14 +57,12 @@ class SaleSerializer(serializers.ModelSerializer):
         user = getattr(request, 'user', None)
         center_user = getattr(user, 'created_by_center', None)
         market = Market.objects.filter(center=center_user).first()
-        # Mövcud aktiv səbət tapılır və ya yaradılır
         sale, created = Sale.objects.get_or_create(user=user, is_cart=True, defaults={'total_price': 0})
         total_price = sale.total_price or 0
         for item in items_data:
             product = item['product']
             quantity = item['quantity']
             price = product.price or 0
-            # Əgər məhsul səbətdə varsa, miqdarı artır
             sale_item, item_created = SaleItem.objects.get_or_create(sale=sale, product=product, defaults={'quantity': quantity, 'price': price})
             if not item_created:
                 sale_item.quantity += quantity

@@ -1,5 +1,4 @@
 from django.db import models
-from django.apps import apps  # bunu əlavə et
 
 
 class Market(models.Model):

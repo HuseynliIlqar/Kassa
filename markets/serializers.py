@@ -29,7 +29,6 @@ class MarketProductSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        # market sahəsi dəyişilməsin deyə çıxarılır
         validated_data.pop('market', None)
         return super().update(instance, validated_data)
 

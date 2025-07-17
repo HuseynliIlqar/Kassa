@@ -1,7 +1,4 @@
 from rest_framework import viewsets
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 from auth_system.models import User
 from auth_system.permissions import IsCenterUser
 from auth_system.serializers import CreateUserSerializer

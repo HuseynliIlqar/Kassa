@@ -3,3 +3,4 @@ db.sqlite3
 *.vscode/
 .idea/
 .venv
+API_doc.docx

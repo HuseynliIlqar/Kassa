@@ -7,5 +7,6 @@ urlpatterns = [
     path('products/', include('products.urls')),
     path('market/', include('markets.urls')),
     path('cashdesk/', include('cashDesk.urls')),
+    path('price/', include('price_system.urls')),
 
 ]

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from markets.models import MarketProduct
 from .models import Product, Category, Unit, Supplier
 
 
@@ -46,12 +47,23 @@ class ProductSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
 
-
     def create(self, validated_data):
         user = self.context['request'].user
+
         validated_data['product_creator'] = user
         validated_data['update'] = True
-        return super().create(validated_data)
+
+        # Əvvəlcə Product-ı yarat
+        product = super().create(validated_data)
+
+        # Sonra MarketProduct-u yarat
+        MarketProduct.objects.create(
+            market=user.market,
+            product=product,
+            quantity=validated_data.get('quantity', 0)
+        )
+
+        return product
 
     def update(self, instance, validated_data):
         validated_data['update'] = True
@@ -60,8 +72,6 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
-
-
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -98,3 +108,4 @@ class SupplierSerializer(serializers.ModelSerializer):
         model = Supplier
         fields = ['id', 'name', 'phone', 'address', 'is_active','created_by_center', 'created_at','updated_at']
         read_only_fields = ['created_at','updated_at','created_by_center']
+

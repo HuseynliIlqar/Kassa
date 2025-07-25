@@ -1,22 +1,37 @@
 from rest_framework import viewsets
-from rest_framework.exceptions import PermissionDenied
-from auth_system.permissions import IsCenterUser, IsAccsesStock
-from .models import MarketProduct
-from .serializers import MarketProductSerializer
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from auth_system.permissions import IsAccsesStock, IsCenterUser
+from .models import MarketProduct, MarketProductMovement
+from .serializers import MarketProductMovementSerializer, MarketProductSerializer
 
 
-class MarketProductViewSet(viewsets.ModelViewSet):
-    queryset = MarketProduct.objects.all()
-    serializer_class = MarketProductSerializer
+class MarketProductMovementViewSet(viewsets.ModelViewSet):
+    queryset = MarketProductMovement
+    serializer_class = MarketProductMovementSerializer
     permission_classes = [IsAccsesStock]
 
     def get_queryset(self):
         user = self.request.user
         center_user = getattr(user, 'created_by_center', None)
-        return MarketProduct.objects.filter(market__center=center_user)
+        if center_user:
+            return MarketProductMovement.objects.filter(market_product__market__center=center_user)
+        return MarketProductMovement.objects.none()
 
-    def create(self, request, *args, **kwargs):
+    def get_permissions(self):
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return [IsAuthenticated(), IsCenterUser()]
+        return super().get_permissions()
+
+
+
+class MarketProductListAPIView(APIView):
+    permission_classes = [IsAccsesStock]
+
+    def get(self, request):
         user = request.user
-        if not user.is_authenticated or not user.is_stock_accses:
-            raise PermissionDenied("You do not have permission to perform this action.")
-        return super().create(request, *args, **kwargs)
+        center_user = getattr(user, 'created_by_center', None)
+        queryset = MarketProduct.objects.filter(market__center=center_user)
+        serializer = MarketProductSerializer(queryset, many=True)
+        return Response(serializer.data)

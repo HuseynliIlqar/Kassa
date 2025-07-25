@@ -4,7 +4,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-from auth_system.permissions import IsCenterUser
 from products.models import Product
 from products.serializers import ProductSerializer
 

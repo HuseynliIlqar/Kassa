@@ -13,5 +13,23 @@ class MarketProduct(models.Model):
     product = models.ForeignKey('products.Product', on_delete=models.CASCADE, related_name='market_products')
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
+
+    class Meta:
+        unique_together = ('market', 'product')
+
     def __str__(self):
-        return f"{self.product.name} in {self.market.name}"
+        return f"{self.product.name} in {self.market.name} ({self.quantity})"
+
+
+class MarketProductMovement(models.Model):
+    MOVEMENT_TYPES = (
+        ("in", "Stock In"),         # Mal qəbulu
+        ("out", "Stock Out"),       # Mal çıxışı (silinmə/zay)
+    )
+    market_product = models.ForeignKey(MarketProduct, on_delete=models.CASCADE)
+    movement_type = models.CharField(max_length=10, choices=MOVEMENT_TYPES)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    user = models.ForeignKey('auth_system.User', on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    comment = models.TextField(blank=True, null=True)

@@ -53,10 +53,8 @@ class ProductSerializer(serializers.ModelSerializer):
         validated_data['product_creator'] = user
         validated_data['update'] = True
 
-        # Əvvəlcə Product-ı yarat
         product = super().create(validated_data)
 
-        # Sonra MarketProduct-u yarat
         MarketProduct.objects.create(
             market=user.market,
             product=product,

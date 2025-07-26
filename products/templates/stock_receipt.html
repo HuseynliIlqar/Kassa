@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <title>Giriş / İadə Sənədi</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h2 { text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid black; padding: 8px; text-align: left; }
+        footer { margin-top: 40px; }
+    </style>
+</head>
+<body>
+    <h2>{{ session.movement_type|title }} Qəbzi</h2>
+    <p><strong>Tarix:</strong> {{ session.created_at }}</p>
+    <p><strong>İzah:</strong> {{ session.comment }}</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Məhsul</th>
+                <th>Barkod</th>
+                <th>Miqdar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for movement in movements %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ movement.market_product.product.name }}</td>
+                <td>{{ movement.market_product.product.barcode }}</td>
+                <td>{{ movement.quantity }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <footer>
+        <p><strong>Tərtib edən:</strong> {{ session.created_by.username }}</p>
+        <p><strong>İmza:</strong> ____________________</p>
+    </footer>
+</body>
+</html>

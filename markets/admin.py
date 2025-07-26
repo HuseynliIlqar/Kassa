@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Market, MarketProduct,MarketProductMovement
+from .models import Market, MarketProduct, MarketProductMovement, StockSession
 
 
 @admin.register(Market)
@@ -50,3 +50,15 @@ class MarketProductMovementAdmin(admin.ModelAdmin):
 
     market.short_description = "Market"
     product.short_description = "Product"
+
+
+@admin.register(StockSession)
+class StockSessionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'movement_type', 'center', 'created_by', 'created_at', 'short_comment')
+    list_filter = ('movement_type', 'center', 'created_at')
+    search_fields = ('center__username', 'created_by__username', 'comment')
+    readonly_fields = ('created_at',)
+
+    def short_comment(self, obj):
+        return obj.comment[:30] + "..." if obj.comment and len(obj.comment) > 30 else obj.comment
+    short_comment.short_description = 'Comment'

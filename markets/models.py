@@ -33,3 +33,21 @@ class MarketProductMovement(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     comment = models.TextField(blank=True, null=True)
+    stock_session = models.ForeignKey(
+        'markets.StockSession',  # və ya sadəcə 'StockSession' əgər eyni app-dadırsa
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='movements'
+    )
+
+
+class StockSession(models.Model):
+    center = models.ForeignKey('auth_system.User', on_delete=models.CASCADE)
+    movement_type = models.CharField(max_length=10, choices=[("in", "Stock In"), ("out", "Stock Out")])
+    created_by = models.ForeignKey('auth_system.User', on_delete=models.SET_NULL, null=True, related_name='created_stock_sessions')
+    created_at = models.DateTimeField(auto_now_add=True)
+    comment = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.movement_type.upper()} Session #{self.id} - {self.center.username}"

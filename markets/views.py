@@ -121,23 +121,29 @@ class StockBulkMovementAPIView(APIView):
 class StockSessionCreateAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+
+    def get (self, request):
+        user = request.user
+        center = user.created_by_center
+        sessions = StockSession.objects.filter(center=center).prefetch_related('movements__market_product__product')
+        serializer = StockSessionWithItemsSerializer(sessions, many=True)
+        return Response(serializer.data)
+
     def post(self, request):
         user = request.user
         data = request.data
 
-        # 1. Session məlumatlarını yoxla və yarat
         session_serializer = StockSessionSerializer(
             data={
                 "movement_type": data.get("movement_type"),
                 "comment": data.get("comment", "")
             },
-            context={"request": request}  # ⚠️ vacib düzəliş
+            context={"request": request}
         )
 
         session_serializer.is_valid(raise_exception=True)
         stock_session = session_serializer.save(created_by=user)
 
-        # 2. Məhsulları loop ilə yoxla və movement yarat
         items = data.get("items", [])
         if not items:
             raise ValidationError("Ən azı bir məhsul əlavə olunmalıdır.")
@@ -156,7 +162,6 @@ class StockSessionCreateAPIView(APIView):
                 errors.append(f"Məhsul tapılmadı: {barcode}")
                 continue
 
-            # Əlavə yoxlama: bu məhsul istifadəçinin mərkəzinə aiddirmi?
             if market_product.product.product_creator != user.created_by_center:
                 errors.append(f"Məhsul sənin mərkəzinə aid deyil: {barcode}")
                 continue
@@ -165,7 +170,7 @@ class StockSessionCreateAPIView(APIView):
                 errors.append(f"Kifayət qədər stok yoxdur: {barcode}")
                 continue
 
-            # Miktarı dəyiş
+
             if data["movement_type"] == "in":
                 market_product.quantity += quantity
             elif data["movement_type"] == "out":
@@ -173,7 +178,6 @@ class StockSessionCreateAPIView(APIView):
 
             market_product.save()
 
-            # Movement qeyd et
             MarketProductMovement.objects.create(
                 market_product=market_product,
                 quantity=quantity,

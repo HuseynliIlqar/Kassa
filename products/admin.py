@@ -10,7 +10,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(Supplier)
 class SupplierAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name')
+    list_display = ('id', 'name','created_by_center', 'created_at', 'updated_at', 'is_active')
     search_fields = ('name',)
 
 @admin.register(Unit)

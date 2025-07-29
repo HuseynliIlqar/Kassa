@@ -34,7 +34,7 @@ class MarketProductMovement(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     comment = models.TextField(blank=True, null=True)
     stock_session = models.ForeignKey(
-        'markets.StockSession',  # və ya sadəcə 'StockSession' əgər eyni app-dadırsa
+        'markets.StockSession',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

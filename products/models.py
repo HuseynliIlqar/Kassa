@@ -25,7 +25,7 @@ class Unit(models.Model):
         return self.name
 
 class Supplier(models.Model):
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
     phone = models.CharField(max_length=20, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
@@ -43,8 +43,8 @@ class Supplier(models.Model):
         return self.name
 
 class Product(models.Model):
-    barcode = models.CharField(max_length=50, unique=True)
-    name = models.CharField(max_length=255, unique=True)
+    barcode = models.CharField(max_length=50,unique=True)
+    name = models.CharField(max_length=255,)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True)
     supplier = models.ForeignKey('products.Supplier', on_delete=models.SET_NULL, null=True)

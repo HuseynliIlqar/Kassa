@@ -4,3 +4,4 @@ db.sqlite3
 .idea/
 .venv
 API_doc.docx
+.~lock.API_doc.docx#

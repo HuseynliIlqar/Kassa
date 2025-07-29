@@ -78,7 +78,6 @@ class MarketProductMovementSerializer(serializers.ModelSerializer):
         movement_type = validated_data['movement_type']
         quantity = validated_data['quantity']
 
-        # Əgər stock_session ötürülməyibsə, avtomatik yaradılır
         stock_session = validated_data.get('stock_session')
         if not stock_session:
             stock_session = StockSession.objects.create(
@@ -88,10 +87,6 @@ class MarketProductMovementSerializer(serializers.ModelSerializer):
                 comment=validated_data.get('comment', '')
             )
             validated_data['stock_session'] = stock_session
-
-        # Stok miqdarını dəyiş
-        if movement_type == 'out' and market_product.quantity < quantity:
-            raise serializers.ValidationError("Insufficient stock for this product.")
 
         if movement_type == 'in':
             market_product.quantity += quantity

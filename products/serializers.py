@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from markets.models import MarketProduct
-from .models import Product, Category, Unit, Supplier
+from .models import Product, Category, Supplier
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -27,13 +27,6 @@ class ProductSerializer(serializers.ModelSerializer):
         required=True,
         allow_null=True,
         error_messages={'required': 'Kateqoriya boş qoyula bilməz!'}
-    )
-    unit = serializers.SlugRelatedField(
-        slug_field='name',
-        queryset=Unit.objects.all(),
-        required=True,
-        allow_null=True,
-        error_messages={'required': 'Vahid boş qoyula bilməz!'}
     )
     supplier = serializers.SlugRelatedField(
         slug_field='name',

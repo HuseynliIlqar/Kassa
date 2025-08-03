@@ -7,45 +7,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from auth_system.permissions import IsAccsesStock, IsCenterUser
 from .models import MarketProduct, MarketProductMovement, StockSession
-from .serializers import MarketProductMovementSerializer, MarketProductSerializer, BulkStockItemSerializer, \
+from .serializers import  MarketProductSerializer, BulkStockItemSerializer, \
     StockSessionSerializer, StockSessionWithItemsSerializer
 
 
-class MarketProductMovementViewSet(viewsets.ModelViewSet):
-    queryset = MarketProductMovement.objects.all()
-    serializer_class = MarketProductMovementSerializer
-    permission_classes = [IsCenterUser]
 
-    def get_queryset(self):
-        user = self.request.user
-        center_user = getattr(user, 'created_by_center', None)
-        if center_user:
-            return MarketProductMovement.objects.filter(
-                market_product__market__center=center_user,
-                market_product__product__product_creator=center_user
-            )
-        return MarketProductMovement.objects.none()
-
-    def get_permissions(self):
-        if self.action in ['update', 'partial_update', 'destroy']:
-            return [IsAuthenticated(), IsCenterUser()]
-        return super().get_permissions()
-
-    def perform_create(self, serializer):
-        user = self.request.user
-        market_product = serializer.validated_data['market_product']
-        if market_product.product.product_creator != user.created_by_center:
-            raise PermissionDenied("Bu məhsul sizin mərkəz tərəfindən yaradılmayıb.")
-        serializer.save(user=user)
-
-    def perform_update(self, serializer):
-        user = self.request.user
-        market_product = serializer.validated_data.get(
-            'market_product', serializer.instance.market_product
-        )
-        if market_product.product.product_creator != user.created_by_center:
-            raise PermissionDenied("Bu məhsul sizin mərkəz tərəfindən yaradılmayıb.")
-        serializer.save()
 
 class MarketProductListAPIView(APIView):
     permission_classes = [IsAccsesStock]
@@ -62,7 +28,6 @@ class MarketProductListAPIView(APIView):
 
 class StockBulkMovementAPIView(APIView):
     permission_classes = [IsAuthenticated, IsAccsesStock]
-
     def post(self, request):
         user = request.user
         center = user.created_by_center
@@ -213,7 +178,19 @@ class StockSessionReceiptHTMLView(APIView):
         session = get_object_or_404(StockSession, pk=pk, center=request.user.created_by_center)
         movements = MarketProductMovement.objects.filter(stock_session=session).select_related('market_product__product')
 
-        return render(request, 'stock_receipt.html', {
-            'session': session,
-            'movements': movements
-        })
+        data = {
+            "session_id": session.id,
+            "movement_type": session.movement_type,
+            "comment": session.comment,
+            "created_at": session.created_at,
+            "movements": [
+                {
+                    "product_name": m.market_product.product.name,
+                    "quantity": m.quantity,
+                    "movement_type": m.movement_type,
+                }
+                for m in movements
+            ]
+        }
+
+        return Response(data)

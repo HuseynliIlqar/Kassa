@@ -17,12 +17,6 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-class Unit(models.Model):
-    """Vahidlər: ədəd, kq, litr və s."""
-    name = models.CharField(max_length=50)
-
-    def __str__(self):
-        return self.name
 
 class Supplier(models.Model):
     name = models.CharField(max_length=255)
@@ -46,10 +40,10 @@ class Product(models.Model):
     barcode = models.CharField(max_length=50,unique=True)
     name = models.CharField(max_length=255,)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-    unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True)
     supplier = models.ForeignKey('products.Supplier', on_delete=models.SET_NULL, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     product_creator = models.ForeignKey('auth_system.User', on_delete=models.SET_NULL, null=True, related_name='created_products')
+    is_weighted = models.BooleanField(default=False, help_text="Is this product sold by weight?")
     update = models.BooleanField(default=True)
 
     is_active = models.BooleanField(default=True)

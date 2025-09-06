@@ -36,9 +36,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
-    """
-    Viewset for managing product categories.
-    """
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsCenterUser]
@@ -79,9 +77,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 
 class SupplierViewSet(viewsets.ModelViewSet):
-    """
-    Viewset for managing suppliers.
-    """
     queryset = Supplier.objects.all()
     serializer_class = SupplierSerializer
     permission_classes = [IsCenterUser]

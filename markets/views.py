@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import ListAPIView, get_object_or_404
@@ -54,22 +53,18 @@ class StockBulkMovementAPIView(APIView):
             except MarketProduct.DoesNotExist:
                 return Response({"detail": f"Product with barcode {barcode} not found."}, status=404)
 
-            # Məhsul mərkəzə aid olmalıdır
             if market_product.product.product_creator != center:
                 return Response({"detail": f"Product {barcode} is not owned by your center."}, status=403)
 
-            # 'out' zamanı stok kifayət etməlidir
             if movement_type == "out" and market_product.quantity < quantity:
                 return Response({"detail": f"Insufficient stock for product {barcode}."}, status=400)
 
-            # Stok dəyiş
             if movement_type == "in":
                 market_product.quantity += quantity
             elif movement_type == "out":
                 market_product.quantity -= quantity
             market_product.save()
 
-            # Hərəkəti yadda saxla
             movement = MarketProductMovement.objects.create(
                 market_product=market_product,
                 movement_type=movement_type,

@@ -1,40 +1,81 @@
-📘 Kassa Sistemi – API Dokumentasiyası
-Giriş
-Bu sistem pərakəndə satış və stok idarəetməsi üçün hazırlanmışdır. API-lər aşağıdakı əsas funksionallıqları təmin edir:
-    • İstifadəçi (mərkəz, market, kassir və s.) idarəsi
-    • Məhsul, tədarükçü və kateqoriya idarəsi
-    • Satış və qaytarma əməliyyatları
-    • Stok hərəkətləri və sessiyalar
-    • Qiymət dəyişiklikləri və barkod əsaslı çap
 
-🔐 Auth – Token Sistemi
-1.1 Token əldə et
-POST /api/token/
-Request:
+---
+
+# 📘 Kassa Sistemi – API Documentation
+
+## 📌 Overview
+
+Bu layihə **pərakəndə satış (POS)** və **stok idarəetməsi** üçün hazırlanmış RESTful API sistemidir. Sistem bir neçə rol və modul üzərində qurulub və aşağıdakı əsas biznes proseslərini əhatə edir:
+
+* İstifadəçi və rol idarəetməsi (mərkəz, market, kassir)
+* Məhsul, kateqoriya və tədarükçü idarəsi
+* Satış, checkout və qaytarma əməliyyatları
+* Stok hərəkətləri və stok sessiyaları
+* Qiymət dəyişiklikləri və barkod əsaslı çap funksiyaları
+
+API JWT token əsaslı autentifikasiya ilə qorunur.
+
+---
+
+## 🔐 Authentication (JWT)
+
+### Token əldə etmək
+
+**POST** `/api/token/`
+
+```json
 {
   "username": "kassir",
   "password": "parol"
 }
-Response:
+```
+
+**Response**
+
+```json
 {
   "access": "JWT_ACCESS_TOKEN",
   "refresh": "JWT_REFRESH_TOKEN"
 }
-1.2 Token yenilə
-POST /api/token/refresh/
-Request:
+```
+
+---
+
+### Token yeniləmək
+
+**POST** `/api/token/refresh/`
+
+```json
 {
   "refresh": "JWT_REFRESH_TOKEN"
 }
-Response:
+```
+
+**Response**
+
+```json
 {
   "access": "NEW_ACCESS_TOKEN"
 }
+```
 
-👤 İstifadəçi Yarat (Mərkəz istifadəçisi)
-POST /
+---
+
+## 👤 User Management
+
+### İstifadəçi yaratmaq (Mərkəz səviyyəsi)
+
+**POST** `/`
+
+**Headers**
+
+```
 Authorization: Bearer <access_token>
-Body:
+```
+
+**Body**
+
+```json
 {
   "username": "kassir1",
   "password": "secret",
@@ -43,79 +84,145 @@ Body:
   "is_panel_accses": false,
   "is_price_accses": true
 }
-Response:
+```
+
+**Response**
+
+```json
 {
   "id": 3,
   "username": "kassir1",
   "is_market": true,
-  "is_stock_accses": true,
-  ...
+  "is_stock_accses": true
 }
+```
 
-🛒 Satış Əməliyyatları (Cash Desk)
-2.1 Satış yaradılma (Səbət yaradılır)
-POST /cashdesk/sale/
-Body:
+---
+
+## 🛒 Cash Desk – Satış Əməliyyatları
+
+### Satış yaratmaq (Səbət)
+
+**POST** `/cashdesk/sale/`
+
+```json
 {
   "items": [
-    {"product": 1, "quantity": 2}
+    { "product": 1, "quantity": 2 }
   ]
 }
-2.2 Checkout – səbəti satışa çevirmək
-POST /cashdesk/sale/checkout/
-Response:
+```
+
+---
+
+### Checkout (səbəti satışa çevirmək)
+
+**POST** `/cashdesk/sale/checkout/`
+
+**Response**
+
+```json
 {
   "detail": "Səbət satışa çevrildi.",
   "sale_id": 15
 }
-2.3 Kassir X-Rapor
-GET /cashdesk/sale/day-summary/
-Response:
-Kassirin bu günkü satışlarının cəmi və detallı siyahısı.
-2.4 Kassir Z-Rapor (Hesabat + sıfırlama)
-POST /cashdesk/sale/reset-sales/
-Response:
-Satışlar is_counted=true edilir.
-2.5 Məhsul Qaytarma
-POST /cashdesk/sale/return-item/
-Body:
+```
+
+---
+
+### Kassir X-Rapor (Günlük icmal)
+
+**GET** `/cashdesk/sale/day-summary/`
+
+> Kassirin gün ərzində etdiyi satışların ümumi məbləği və detallı siyahısı.
+
+---
+
+### Kassir Z-Rapor (Hesabat + sıfırlama)
+
+**POST** `/cashdesk/sale/reset-sales/`
+
+> Satışlar `is_counted=true` olaraq işarələnir.
+
+---
+
+### Məhsul qaytarma
+
+**POST** `/cashdesk/sale/return-item/`
+
+```json
 {
   "sale_id": 5,
   "sale_item_id": 11,
   "return_quantity": 1
 }
+```
 
-📦 Stok Hərəkətləri
-3.1 Bütün məhsulları (market məhsulları) gətir
-GET /markets/list/
-3.2 Tək-tək stok hərəkəti əlavə et
-POST /markets/stock/
-Body:
+---
+
+## 📦 Stock Management
+
+### Market məhsullarını siyahıla
+
+**GET** `/markets/list/`
+
+---
+
+### Tək stok hərəkəti
+
+**POST** `/markets/stock/`
+
+```json
 {
   "market_product_id": 2,
   "movement_type": "in",
   "quantity": 10
 }
-3.3 Toplu stok hərəkəti (StockBulk)
-POST /markets/stock-bulk/
-Body:
+```
+
+---
+
+### Toplu stok əməliyyatı
+
+**POST** `/markets/stock-bulk/`
+
+```json
 {
   "movement_type": "out",
   "comment": "Təmizlik səbəbi ilə",
   "items": [
-    {"product_barcode": "123456", "quantity": 5}
+    { "product_barcode": "123456", "quantity": 5 }
   ]
 }
-3.4 Stock Session siyahısı
-GET /markets/stock-sessions/
-3.5 Session-a aid qaimə (HTML)
-GET /markets/stock-session/<id>/receipt/
+```
 
-📦 Məhsullar
-4.1 Məhsul əlavə et
-POST /products/products/
+---
+
+### Stok sessiyaları
+
+**GET** `/markets/stock-sessions/`
+
+---
+
+### Sessiyaya aid qaimə (HTML)
+
+**GET** `/markets/stock-session/<id>/receipt/`
+
+---
+
+## 📦 Products
+
+### Məhsul əlavə etmək
+
+**POST** `/products/products/`
+
+**Headers**
+
+```
 Authorization: Bearer <center_access_token>
-Body:
+```
+
+```json
 {
   "barcode": "999001",
   "name": "Yeni Məhsul",
@@ -124,33 +231,78 @@ Body:
   "supplier": "Test",
   "price": 3.5
 }
-4.2 Qiyməti dəyiş (update=True olur)
-PATCH /products/products/<id>/
-Body-də price dəyişdirilir.
+```
 
-📋 Qiymət Dəyişiklikləri və Çap
-5.1 Dəyişmiş qiymət siyahısını al
-GET /products/products/price-change-list/
-5.2 Dəyişmiş qiymətləri HTML olaraq çap et
-POST /products/products/price-change-list/
-Response: HTML
-5.3 Seçilmiş barkodlara əsasən qiymətləri çap et
-POST /products/products/get-prices-by-barcodes-html/
-Body:
+---
+
+### Qiymət yeniləmək
+
+**PATCH** `/products/products/<id>/`
+
+> `price` dəyişdirildikdə məhsul avtomatik olaraq `update=True` vəziyyətinə keçir.
+
+---
+
+## 📋 Price Change & Printing
+
+### Qiyməti dəyişmiş məhsullar
+
+**GET** `/products/products/price-change-list/`
+
+---
+
+### Qiymətləri HTML formatında çap et
+
+**POST** `/products/products/price-change-list/`
+
+**Response**: HTML
+
+---
+
+### Barkodlara görə qiymət çapı
+
+**POST** `/products/products/get-prices-by-barcodes-html/`
+
+```json
 {
   "barcodes": ["1234567890", "9876543210"]
 }
+```
 
+---
 
-🔖 Kateqoriya və Tədarükçü
-6.1 Kateqoriya əlavə et
-POST /products/categories/
-{ "name": "Süd məhsulları" }
-6.2 Tədarükçü əlavə et
-POST /products/suppliers/
+## 🔖 Categories & Suppliers
+
+### Kateqoriya əlavə et
+
+**POST** `/products/categories/`
+
+```json
+{
+  "name": "Süd məhsulları"
+}
+```
+
+---
+
+### Tədarükçü əlavə et
+
+**POST** `/products/suppliers/`
+
+```json
 {
   "name": "Məhsullar MMC",
   "phone": "0501234567",
   "address": "Bakı, Yasamal"
 }
+```
 
+---
+
+## 🧩 Notes
+
+* API JWT authentication tələb edir
+* HTML response-lar printer və ya POS ekranları üçün nəzərdə tutulub
+* Rollara əsaslanan access control tətbiq olunur
+
+---
